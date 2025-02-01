@@ -24,10 +24,6 @@ public class HibernateEventListenerConfig {
         SessionFactoryImplementor sessionFactory = entityManagerFactory.unwrap(SessionFactoryImplementor.class);
         EventListenerRegistry registry = sessionFactory.getServiceRegistry().getService(EventListenerRegistry.class);
 
-        // Use the Spring-managed AuditListener bean
-//        registry.appendListeners(EventType.PRE_INSERT, auditListener);
-//        registry.appendListeners(EventType.PRE_UPDATE, auditListener);
-//        registry.appendListeners(EventType.PRE_DELETE, auditListener);
         registry.appendListeners(EventType.POST_INSERT, auditListener);
         registry.appendListeners(EventType.POST_UPDATE, auditListener);
         registry.appendListeners(EventType.POST_DELETE, auditListener);

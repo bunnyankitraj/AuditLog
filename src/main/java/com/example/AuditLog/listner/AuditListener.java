@@ -2,6 +2,7 @@ package com.example.AuditLog.listner;
 
 import com.example.AuditLog.entity.AuditLog;
 import com.example.AuditLog.entity.AuditRepository;
+import com.example.AuditLog.event.EventPublisher;
 import jakarta.transaction.Transactional;
 import org.hibernate.event.spi.*;
 import org.hibernate.persister.entity.EntityPersister;
@@ -15,6 +16,8 @@ public class AuditListener implements PostUpdateEventListener, PostInsertEventLi
 
     @Autowired
     private AuditRepository auditRepository;
+    @Autowired
+    private EventPublisher eventPublisher;
 
     @Transactional(Transactional.TxType.REQUIRES_NEW)
     private void logChanges(Object entity, String operation, Object[] oldState, Object[] newState, String[] propertyNames) {
@@ -32,8 +35,8 @@ public class AuditListener implements PostUpdateEventListener, PostInsertEventLi
             auditLog.setEntityId("UNKNOWN");
             auditLog.setTraceId("traceId");
             auditLog.setChanges("Changes as per logic");
-
-            auditRepository.save(auditLog);
+            eventPublisher.publishEvent(auditLog);
+//            auditRepository.save(auditLog);
         } catch (Exception e) {
             e.printStackTrace();
         }
