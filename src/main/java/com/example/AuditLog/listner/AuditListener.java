@@ -2,6 +2,8 @@ package com.example.AuditLog.listner;
 
 import com.example.AuditLog.entity.AuditLog;
 import com.example.AuditLog.entity.AuditRepository;
+import com.example.AuditLog.entity.Product;
+import com.example.AuditLog.entity.User;
 import jakarta.transaction.Transactional;
 import org.hibernate.event.spi.*;
 import org.hibernate.persister.entity.EntityPersister;
@@ -9,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Component
 public class AuditListener implements PostUpdateEventListener, PostInsertEventListener, PostDeleteEventListener {
@@ -23,28 +26,61 @@ public class AuditListener implements PostUpdateEventListener, PostInsertEventLi
         }
 
         try {
-            // Your existing code for saving the audit log
             AuditLog auditLog = new AuditLog();
             auditLog.setTableName(entity.getClass().getSimpleName());
             auditLog.setOperationType(operation);
             auditLog.setChangedBy("Ankit");
             auditLog.setTimestamp(LocalDateTime.now());
-            auditLog.setEntityId("UNKNOWN");
-            auditLog.setTraceId("traceId");
-            auditLog.setChanges("Changes as per logic");
+            
+            // Get the entity identifier
+            String entityId = getEntityIdentifier(entity);
+            auditLog.setEntityId(entityId);
+            
+            // Generate a simple trace ID (you might want to use a more sophisticated approach)
+            auditLog.setTraceId(UUID.randomUUID().toString());
+            
+            // Track the actual changes
+            StringBuilder changes = new StringBuilder();
+            if ("INSERT".equals(operation) || "UPDATE".equals(operation)) {
+                for (int i = 0; i < propertyNames.length; i++) {
+                    if (newState[i] != null) {
+                        changes.append(propertyNames[i])
+                              .append(": ")
+                              .append(newState[i])
+                              .append(", ");
+                    }
+                }
+            }
+            auditLog.setChanges(changes.toString());
 
             auditRepository.save(auditLog);
+            auditRepository.flush();
         } catch (Exception e) {
+            // Log the error but don't throw it to prevent transaction rollback
+            System.err.println("Error in audit logging: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
+    private String getEntityIdentifier(Object entity) {
+        if (entity instanceof Product) {
+            return ((Product) entity).getCode();
+        } else if (entity instanceof User) {
+            return String.valueOf(((User) entity).getId());
+        }
+        return "UNKNOWN";
+    }
 
     @Override
     public void onPostInsert(PostInsertEvent event) {
-        System.out.println("🔹 Post triggered for: " + event.getEntity().getClass().getSimpleName());
-        logChanges(event.getEntity(), "INSERT", null, event.getState(), event.getPersister().getPropertyNames());
-
+        try {
+            System.out.println("🔹 Post triggered for: " + event.getEntity().getClass().getSimpleName());
+            logChanges(event.getEntity(), "INSERT", null, event.getState(), event.getPersister().getPropertyNames());
+        } catch (Exception e) {
+            // Log the error but don't throw it to prevent transaction rollback
+            System.err.println("Error in audit logging: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @Override

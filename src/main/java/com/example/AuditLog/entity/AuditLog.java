@@ -11,7 +11,6 @@ import java.util.Date;
 @Entity
 @Data
 @Table(name = "audit_log")
-//@EntityListeners(AuditListener.class)
 public class AuditLog  {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,10 +21,10 @@ public class AuditLog  {
     private String tableName;
     private String entityId;
 
-    private String operationType; // INSERT, UPDATE, DELETE
-    private String changedBy; // Username or system user
+    private String operationType;
+    private String changedBy;
     private LocalDateTime timestamp;
 
     @Column(columnDefinition = "TEXT")
-    private String changes; // JSON or text representation of changes
+    private String changes;
 }

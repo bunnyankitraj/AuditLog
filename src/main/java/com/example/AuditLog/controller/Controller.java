@@ -4,7 +4,9 @@ import com.example.AuditLog.entity.Product;
 import com.example.AuditLog.entity.ProductRepository;
 import com.example.AuditLog.entity.User;
 import com.example.AuditLog.entity.UserRepository;
+import com.example.AuditLog.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +21,9 @@ public class Controller {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private ProductService productService;
 
     @PostMapping("/product")
     public Product createProduct(@RequestBody Product product) {
